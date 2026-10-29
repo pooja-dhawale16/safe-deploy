@@ -49,8 +49,18 @@ jobs:
         with:
           image-ref: safe-deploy:${{ github.sha }}
           format: table
+          output: trivy-report.txt
           vuln-type: os,library
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "0"
+
+      - name: Upload Trivy report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-report
+          path: trivy-report.txt
+          if-no-files-found: warn
+          retention-days: 14
 
