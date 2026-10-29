@@ -3,9 +3,11 @@ name: SafeDeploy CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -63,4 +65,18 @@ jobs:
           path: trivy-report.txt
           if-no-files-found: warn
           retention-days: 14
+
+  semgrep:
+    name: Semgrep Source Code Scan
+    runs-on: ubuntu-latest
+
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: semgrep scan --config p/python --error app/
 
