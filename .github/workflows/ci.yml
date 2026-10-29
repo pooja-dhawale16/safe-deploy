@@ -1,4 +1,3 @@
-
 name: SafeDeploy CI
 
 on:
@@ -81,10 +80,31 @@ jobs:
       - name: Run Semgrep
         run: semgrep scan --config p/python --error app/
 
+  sbom:
+    name: Generate SBOM with Syft
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image for SBOM
+        run: docker build -t safe-deploy:${{ github.sha }} .
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: safe-deploy:${{ github.sha }}
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+          upload-artifact: true
+          artifact-name: safe-deploy-sbom
+
   publish:
     name: Publish Image to GHCR
     runs-on: ubuntu-latest
-    needs: [test, docker-build, semgrep]
+    needs: [test, docker-build, semgrep, sbom]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -109,4 +129,3 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
-
