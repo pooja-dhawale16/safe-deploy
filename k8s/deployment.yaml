@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: safe-deploy
+  labels:
+    app: safe-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: safe-deploy
+  template:
+    metadata:
+      labels:
+        app: safe-deploy
+    spec:
+      containers:
+        - name: safe-deploy
+          image: safe-deploy:1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
